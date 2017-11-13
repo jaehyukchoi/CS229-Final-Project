@@ -22,6 +22,7 @@ def load_artist_info():
 def gather_media_pages(artist_info, rnd, filename):
     
     info = []
+    failed = []
     session = requests.Session()
 
     base_url = "http://www.findartinfo.com"
@@ -46,7 +47,13 @@ def gather_media_pages(artist_info, rnd, filename):
             
             if(i == 1):
                 header = soup.find_all("h2")[0]
-                header_page_info = header.text.split("|")[-2]
+                
+                try:
+                    header_page_info = header.text.split("|")[-2]
+                except:
+                    failed.append(artist)
+                    break
+                
                 of_idx = header_page_info.find("of")
                 par_idx = header_page_info.find("(")
                 num_pages = int(header_page_info[of_idx + 3: par_idx])
@@ -78,12 +85,27 @@ def gather_media_pages(artist_info, rnd, filename):
         for i in info:
             f.write(str(i) + "\n")
             
+    with codecs.open("failed.txt", "a", "utf-8") as f:
+        for i in failed:
+            f.write(str(i) + "\n")
+            
     return info
 
 if __name__ == "__main__":
     
     print("Reading links.txt...")
-    artist_info = load_artist_info()[0:1000]
+    
+    #Cedric
+    artist_info = load_artist_info()[0:100000]
+    offset = 0
+    
+    #Vidush
+    #artist_info = load_artist_info()[100000:200000]
+    #offset = 100 
+    
+    #Rafi
+    #artist_info = load_artist_info()[200000:]
+    #offset = 200
     
     dst = "./pages/"
     
@@ -95,7 +117,7 @@ if __name__ == "__main__":
         else:
             raise
     
-    batch_size = 200
+    batch_size = 1000
     
     batches = len(artist_info)//batch_size
     left_over = len(artist_info) % batch_size
@@ -103,7 +125,7 @@ if __name__ == "__main__":
     total_start_time = time.time()
     
     for i in range(batches):
-        filename = "media_pages_" + str(i) + ".txt"
+        filename = "media_pages_" + str(i+1+offset) + ".txt"
         start_time = time.time()
         info = gather_media_pages(artist_info[batch_size*(i) :batch_size*(i) + batch_size], i+1, dst + filename)
         print("Gathered " + str(len(info)) + " media pages in this batch.")
@@ -115,6 +137,6 @@ if __name__ == "__main__":
     total += len(info)
     total_elapsed_time = time.time() - start_time
     
-    print("Total Elapsed Time = " + str(elapsed_time))
+    print("\nTotal Elapsed Time = " + str(elapsed_time))
     print("Gathered " + str(total) + " total media pages.")
     print("Time per media page = " + str(elapsed_time/total))
