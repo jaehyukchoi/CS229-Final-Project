@@ -27,8 +27,8 @@ def load_media_info():
 def login(session):
 
     payload = {
-        'Email': 'orbancedric94@gmail.com',
-        'PassWord': '6C0gN8m1So#bX$QU&0ou',
+        'Email': '',
+        'PassWord': '',
         "submitLoginPaid": "Login"
     }
     
