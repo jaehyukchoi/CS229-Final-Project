@@ -1,0 +1,1 @@
+{'pictures': '3', 'name': 'Francisco Pimentol (-)', 'link': '/english/list-prices-by-artist/492393/francisco-pimentol.html', 'prices': '3'}

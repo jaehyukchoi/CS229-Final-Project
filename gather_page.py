@@ -135,8 +135,8 @@ if __name__ == "__main__":
         
     info = gather_media_pages(artist_info[batch_size*batches :batch_size*batches + left_over - 1], batches+1, dst + filename)
     total += len(info)
-    total_elapsed_time = time.time() - start_time
+    total_elapsed_time = time.time() - total_start_time
     
     print("\nTotal Elapsed Time = " + str(elapsed_time))
     print("Gathered " + str(total) + " total media pages.")
-    print("Time per media page = " + str(elapsed_time/total))
+    print("Time per media page = " + str(total_elapsed_time/total))
