@@ -1,19 +1,22 @@
 #!/usr/bin/python
-from PIL import Image
+import cv2
 import os, sys
 
 
 cwd = os.getcwd()
 im_path = cwd + "/images/"
-resize_path = cwd + "/resized images/"
+resize_path = cwd + "/resized_images/"
 im_dirs = os.listdir( im_path )
 
 def resize(size):
     for item in im_dirs:
         if os.path.isfile(im_path+item):
-            im = Image.open(im_path+item)
-            imResize = im.resize((size,size), Image.ANTIALIAS)
-            imResize.save(resize_path + item[:-4] + '_resized.jpg', 'JPEG', quality=90)
+            im = cv2.imread(im_path+item,-1)
+            if im is not None:
+            	resized_image = cv2.resize(im, (size, size), interpolation = cv2.INTER_CUBIC) 
+            	cv2.imwrite(resize_path + item, resized_image)
+            else:
+            	continue
 
 size = input('What size do you want the images?')
 resize(int(size))
