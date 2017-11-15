@@ -5,37 +5,47 @@ import ast
 import os
 import errno
 from bs4 import BeautifulSoup
-
-def load_media_info():
-    
-    src = "./pages_clean/"
-
-    files = os.listdir(src)
-
-    files = sorted(files, key=lambda x: int(x.split("_")[-1].split(".")[0]))
-    
-    media_info = []
-    
-    for file in files[0:1]:
-        print("Reading " + file)
-        with codecs.open(src + file, "r", "utf-8") as f:
-            lines = f.read().split("\n")
-            lines = [x for x in lines if x != ""]
-            
-            for l in lines:
-                media_info.append(ast.literal_eval(l))
-                
-    return media_info
     
 class scraper(object):
     
-    def __init__(self, media_info):
+    def __init__(self, media_file="pages_final.txt"):
+        self.media_file = media_file
         self.session = requests.Session()
-        self.login(self.session)
+        self.login()
         
-        self.media_info = media_info
+        self.total_media = 0
+        self.num_prev_scraped = 0
+        self.num_scraped = 0 
+        self.media_info = []
+        self.load_media_info()
+        
         self.base_url = "http://www.findartinfo.com"
-        self.num_media = len(self.media_info)
+        
+    def load_media_info(self):
+        
+        print("Loading media info. This takes a while...")
+        prev_scraped = []
+        if("media_metadata.txt" in os.listdir("./")):
+            print("Metadata file found.")
+            with codecs.open("media_metadata.txt", "r", "utf-8") as f:
+                lines = f.read().split("\n")
+                lines = [x for x in lines if x != ""]
+                
+                for l in lines:
+                    prev_scraped.append(ast.literal_eval(l)["link"])
+        
+        self.media_info = []
+        with codecs.open(self.media_file, "r", "utf-8") as f:
+            lines = f.read().split("\n")
+            lines = [x for x in lines if x != ""]
+            self.total_media = len(lines) 
+
+            for l in lines:
+                l_dict = ast.literal_eval(l)
+                if(l_dict["link"] not in prev_scraped):
+                    self.media_info.append(l_dict)
+                    
+        self.num_prev_scraped = len(prev_scraped)
         
     def login(self):
 
@@ -57,9 +67,8 @@ class scraper(object):
                 pass
             
         self.session.post("http://www.findartinfo.com/login.html",data=payload)
-        
-    
-    def scrape(self, filename):
+            
+    def scrape(self):
         
         dst = "./images/"
     
@@ -71,12 +80,25 @@ class scraper(object):
             else:
                 raise
         
-        for idx,media in enumerate(media_info):
+        for idx,media in enumerate(self.media_info):
             
-            print("[" + str(idx+1) + "/" + str(num_media) + "] Downloading " + media["title"] + " by " + media["artist"] )
+            print("[" + str(self.num_prev_scraped+idx+1) + "/" + str(self.total_media) + "] Downloading " + media["title"] + " by " + media["artist"] )
         
             link = media["link"]
-            r = session.get(base_url + link)
+            
+            timeout = 1
+            while True:
+                try:
+                    r = self.session.get(self.base_url + link)
+                    break
+                except requests.exceptions.RequestException:
+                    print("Connection error, sleeping for " + str(timeout) + " seconds...")
+                    for i in range(timeout):
+                        time.sleep(1)
+                    
+                    if(timeout < 64):
+                        timeout = timeout*2
+            
             soup = BeautifulSoup(r.text, "html.parser")
             
             images = soup.find_all("img")
@@ -98,15 +120,22 @@ class scraper(object):
                 
                 if("signed" in dict_key or "dating" in dict_key):
                     media[dict_key] = value
-                    
-            try:
-                content = session.get(img_src).content
-            except (requests.exceptions.ConnectionError,requests.exceptions.ConnectionResetError):
-                time.sleep(5)
-                content = session.get(img_src).content
             
+            timeout = 1
+            while True:
+                try:
+                    content = self.session.get(img_src).content
+                    break
+                except requests.exceptions.RequestException:
+                    print("Connection error, sleeping for " + str(timeout) + " seconds...")
+                    for i in range(timeout):
+                        time.sleep(1)
+                        
+                    if(timeout < 64):
+                        timeout = timeout*2
+                        
             #price = med
-            image_filename = media["sell_price"] + "_" + img_src.split("/")[-1]
+            image_filename = str(media["sell_price_adjusted"]) + "_" + img_src.split("/")[-1]
             media["filename"] = image_filename
             
             if(image_filename in os.listdir("./images/")):
@@ -115,17 +144,22 @@ class scraper(object):
             with open(dst + image_filename, 'wb') as media_file:
                 media_file.write(content)
                     
-            with codecs.open(filename, "a", "utf-8") as f:
+            with codecs.open("media_metadata.txt", "a", "utf-8") as f:
                 f.write(str(media) + "\n")
+                
+            self.num_scraped += 1
             
 if __name__ == "__main__":
     
-    download = 100
+    media_file = "pages_final_cedric.txt"
+    #media_file = "pages_final_vidush.txt"
+    #media_file = "pages_final_rafi.txt"
+
+    s = scraper(media_file=media_file)
     
-    media_info = load_media_info()
     start_time = time.time()
-    scrape(media_info[0:download], "metadata.txt")
+    s.scrape()
     elapsed_time = time.time() - start_time
     
-    print(elapsed_time)
-    print(elapsed_time/download)
+    print(elapsed_time/s.num_scraped)
+    
