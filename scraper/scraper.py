@@ -113,19 +113,11 @@ class scraper(object):
             
             for tag in table.find_all("tr"):
                 text = tag.text.strip()
-<<<<<<< HEAD
-<<<<<<< HEAD
                 
                 try:
                     dict_key, value = text.split("\n")[0:2]
                 except:
                     continue
-=======
-                dict_key, value = text.split("\n")[0:2]
->>>>>>> parent of 9978f51... full listings
-=======
-                dict_key, value = text.split("\n")[0:2]
->>>>>>> parent of 9978f51... full listings
                 
                 dict_key = dict_key.lower()
                 value = value.lower()
@@ -195,7 +187,7 @@ class scraper(object):
 
 if __name__ == "__main__":
     
-    media_file = "pages_final.txt"
+    media_file = "pages_final_cedric.txt"
     
     s = scraper(media_file=media_file)
     
