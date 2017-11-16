@@ -6,4 +6,9 @@
 *.pyc
 *.jpeg
 *.ini
+<<<<<<< HEAD
 *.json
+*.txt
+=======
+*.json
+>>>>>>> parent of 9978f51... full listings
