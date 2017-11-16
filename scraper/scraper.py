@@ -108,9 +108,13 @@ class scraper(object):
                 if("/Content/Images" not in img["src"]):
                     img_src = img["src"] 
                     media["src"] = img_src
-                    
-            table = soup.find(id="table6")
             
+            try:
+                table = soup.find(id="table6")
+            except:
+                print("ERROR: Probably not logged in. Check the password.")
+                raise
+                
             for tag in table.find_all("tr"):
                 text = tag.text.strip()
                 
