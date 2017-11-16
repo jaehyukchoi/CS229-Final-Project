@@ -51,7 +51,7 @@ class scraper(object):
 
         payload = {
             'Email': 'orbancedric94@gmail.com',
-            'PassWord': 'cs229project',
+            'PassWord': '',
             "submitLoginPaid": "Login"
         }
         
@@ -187,7 +187,7 @@ class scraper(object):
 
 if __name__ == "__main__":
     
-    media_file = "pages_final_cedric.txt"
+    media_file = "pages_final.txt"
     
     s = scraper(media_file=media_file)
     

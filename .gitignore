@@ -6,9 +6,6 @@
 *.pyc
 *.jpeg
 *.ini
-<<<<<<< HEAD
 *.json
-*.txt
-=======
+/scraper/*.txt
 *.json
->>>>>>> parent of 9978f51... full listings
