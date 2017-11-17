@@ -10,18 +10,21 @@ from bs4 import BeautifulSoup
 class scraper(object):
     
     def __init__(self, media_file="pages_final.txt"):
+        
+        self.base_url = "http://www.findartinfo.com"
         self.acceptable_filetypes = ["jpg","jpeg","png"]
         self.media_file = media_file
         self.session = requests.Session()
-        self.login()
+        self.logged_in = self.login()
         
         self.total_media = 0
         self.num_prev_scraped = 0
         self.num_scraped = 0 
         self.media_info = []
-        self.load_media_info()
+        
+        if(self.logged_in):
+            self.load_media_info()
         self.consecutive_errors = 0
-        self.base_url = "http://www.findartinfo.com"
         
     def load_media_info(self):
         
@@ -67,6 +70,15 @@ class scraper(object):
                 pass
             
         self.session.post("http://www.findartinfo.com/login.html",data=payload)
+        
+        r = self.session.get(self.base_url + "/english/price-info/3668178/american-dreamer.html")
+        soup = BeautifulSoup(r.text, "html.parser")
+        table = soup.find(id="table6")
+        
+        if(table == None):
+            return False
+        else:
+            return True
             
     def scrape(self):
         
@@ -109,11 +121,7 @@ class scraper(object):
                     img_src = img["src"] 
                     media["src"] = img_src
             
-            try:
-                table = soup.find(id="table6")
-            except:
-                print("ERROR: Probably not logged in. Check the password.")
-                raise
+            table = soup.find(id="table6")
                 
             for tag in table.find_all("tr"):
                 text = tag.text.strip()
@@ -195,9 +203,12 @@ if __name__ == "__main__":
     
     s = scraper(media_file=media_file)
     
-    start_time = time.time()
-    s.scrape()
-    elapsed_time = time.time() - start_time
-    
-    print(elapsed_time/s.num_scraped)
+    if(s.logged_in == False):
+        print("ERROR: Failed to log in.")
+    else: 
+        start_time = time.time()
+        s.scrape()
+        elapsed_time = time.time() - start_time
+        
+        print(elapsed_time/s.num_scraped)
     
