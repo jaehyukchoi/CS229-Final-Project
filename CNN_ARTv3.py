@@ -49,8 +49,10 @@ def load_data(start,end):
 	X = np.vstack(X)
 	num_images  = int(X.shape[0]/im_size)
 	X = X.reshape((num_images,im_size_flat))
-	test_indices = np.random.choice(num_images,int(num_images*.1),replace=False)
-	train_indices = np.setdiff1d(range(num_images),test_indices)
+	# test_indices = np.random.choice(num_images,int(num_images*.1),replace=False)
+	# train_indices = np.setdiff1d(range(num_images),test_indices)
+	test_indices = np.arange(num_images - int(num_images*.1),num_images)
+	train_indices = np.arange(0,int(num_images*.9))
 
 	labels = np.array(labels)
 	xtrain = X[train_indices,:]
@@ -171,7 +173,7 @@ accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 saver = tf.train.Saver({"W_conv1": W_conv1,"b_conv1": b_conv1,"W_conv2": W_conv2,"b_conv2": b_conv2,"W_conv3": W_conv3,"b_conv3": b_conv3,"W_fc1": W_fc1,"b_fc1": b_fc1,"W_fc2": W_fc2,"b_fc2": b_fc2})
 
 # number of epochs to run
-epoch_count = 1
+epoch_count = 30
 
 if os.path.isfile('training_acc.npy') and os.path.isfile('valid_acc.npy'):
 	training_acc = np.load('training_acc.npy')
