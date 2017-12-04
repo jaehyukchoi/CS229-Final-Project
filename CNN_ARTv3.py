@@ -219,27 +219,27 @@ with tf.Session() as sess:
 				if count%100 == 0:
 					saver.save(sess, os.path.join(os.getcwd(), 'trained_variables2.ckpt'))
 				train_step.run(feed_dict={x: xtrain_chunk, y_: ytrain_chunk, keep_prob: 0.5})
-			num_train_images = xtrain.shape[0]
+			num_train_images = chunk_size*len(chunk_indices)
 			train_acc = train_acc/num_train_images
 			np.append(training_acc,float(train_acc))
 			np.save('training_acc',training_acc)
 			print('training accuracy %g' % train_acc) 
 		
 
-		chunk_indices = generate_chunk(data_dev, chunk_size = batch_size)
-		dev_acc = 0
-		for chunk in chunk_indices:
-			chunk_size = len(chunk)
-			xdev_chunk = data_dev[0][chunk]
-			ydev_chunk = data_dev[1][chunk]
-			chunk_dev_acc = accuracy.eval(feed_dict={x: xdev_chunk, y_: ydev_chunk, keep_prob: 1.0})
-			print('chunk valid accuracy %g' % chunk_dev_acc)
-			dev_acc += chunk_size*chunk_dev_acc
-		num_dev_images = xdev.shape[0]
-		dev_acc = dev_acc/num_dev_images
-		np.append(valid_acc,float(dev_acc))
-		np.save('valid_acc',valid_acc)
-		print('validation accuracy %g' % dev_acc) 
+			chunk_indices = generate_chunk(data_dev, chunk_size = batch_size)
+			dev_acc = 0
+			for chunk in chunk_indices:
+				chunk_size = len(chunk)
+				xdev_chunk = data_dev[0][chunk]
+				ydev_chunk = data_dev[1][chunk]
+				chunk_dev_acc = accuracy.eval(feed_dict={x: xdev_chunk, y_: ydev_chunk, keep_prob: 1.0})
+				print('chunk valid accuracy %g' % chunk_dev_acc)
+				dev_acc += chunk_size*chunk_dev_acc
+			num_dev_images = chunk_size*len(chunk_indices)
+			dev_acc = dev_acc/num_dev_images
+			np.append(valid_acc,float(dev_acc))
+			np.save('valid_acc',valid_acc)
+			print('validation accuracy %g' % dev_acc) 
 
 	# Testing Block
 	# Load test data
@@ -255,7 +255,7 @@ with tf.Session() as sess:
 		chunk_test_acc = accuracy.eval(feed_dict={x: xtest_chunk, y_: ytest_chunk, keep_prob: 1.0})
 		print('chunk test accuracy %g' % chunk_test_acc)
 		test_acc += chunk_size*chunk_test_acc
-	num_test_images = xtest.shape[0]
+	num_test_images = chunk_size*len(chunk_indices)
 	test_acc = test_acc/num_test_images
 	np.save('test_acc',np.array[test_acc])
 	print('test accuracy %g' % test_acc) 
