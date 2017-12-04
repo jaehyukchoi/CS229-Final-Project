@@ -182,8 +182,10 @@ else:
 
 with tf.Session() as sess:
 	sess.run(tf.global_variables_initializer())
-	saver.restore(sess, os.path.join(os.getcwd(), 'trained_variables2.ckpt'))
-	print("Model restored.")
+	if os.path.isfile('trained_variables2.ckpt.data-00000-of-00001'):
+		saver.restore(sess, os.path.join(os.getcwd(), 'trained_variables2.ckpt'))
+		print("Model restored.")
+
 
 	# Training Block
 	for e in  range(epoch_count):
@@ -221,7 +223,7 @@ with tf.Session() as sess:
 				train_step.run(feed_dict={x: xtrain_chunk, y_: ytrain_chunk, keep_prob: 0.5})
 			num_train_images = chunk_size*len(chunk_indices)
 			train_acc = train_acc/num_train_images
-			np.append(training_acc,float(train_acc))
+			training_acc = np.append(training_acc,float(train_acc))
 			np.save('training_acc',training_acc)
 			print('training accuracy %g' % train_acc) 
 		
@@ -237,7 +239,7 @@ with tf.Session() as sess:
 				dev_acc += chunk_size*chunk_dev_acc
 			num_dev_images = chunk_size*len(chunk_indices)
 			dev_acc = dev_acc/num_dev_images
-			np.append(valid_acc,float(dev_acc))
+			valid_acc = np.append(valid_acc,float(dev_acc))
 			np.save('valid_acc',valid_acc)
 			print('validation accuracy %g' % dev_acc) 
 
