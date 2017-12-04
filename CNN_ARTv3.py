@@ -173,7 +173,7 @@ saver = tf.train.Saver({"W_conv1": W_conv1,"b_conv1": b_conv1,"W_conv2": W_conv2
 # number of epochs to run
 epoch_count = 1
 
-if os.path.isfile('training_acc.npy') and os.path.isfile('valid_acc.npy')
+if os.path.isfile('training_acc.npy') and os.path.isfile('valid_acc.npy'):
 	training_acc = np.load('training_acc.npy')
 	valid_acc  = np.load('valid_acc.npy')
 else:
@@ -187,7 +187,7 @@ with tf.Session() as sess:
 
 	# Training Block
 	for e in  range(epoch_count):
-		for t in [1,2,3]
+		for t in [1,2,3]:
 			if t == 1:
 				#Load our data
 				xtrain,labelstrain,xdev,labelsdev = load_data(0,30000)
