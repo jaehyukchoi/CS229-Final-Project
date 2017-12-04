@@ -9,7 +9,7 @@ import os.path
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2' 
 
 # Hyperparameters
-learning_rate = 0.001
+learning_rate = 1e-4
 num_steps = 2000
 batch_size = 32
 
@@ -17,7 +17,7 @@ im_size = 400
 num_input = im_size*im_size 
 im_size_flat = im_size * im_size * 3
 num_classes = 10 # 10 classes of prices ranges
-dropout_rate = 0.75
+dropout_rate = 0.5
 classes = [[0,101],[101,196],[196,321],[321,499],[499,760],[760,1202],[1202,2033],[2033,3857],[3857,9643],[9643,60130038]]
 
 def load_data(start,end):
@@ -166,7 +166,7 @@ y_conv = tf.matmul(h_fc1_drop, W_fc2) + b_fc2
 
 cross_entropy = tf.reduce_mean(
 		tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=y_conv))
-train_step = tf.train.AdamOptimizer(1e-2).minimize(cross_entropy)
+train_step = tf.train.AdamOptimizer(learning_rate).minimize(cross_entropy)
 correct_prediction = tf.equal(tf.argmax(y_conv, 1), tf.argmax(y_, 1))
 accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 
@@ -222,7 +222,7 @@ with tf.Session() as sess:
 				count += 1
 				if count%100 == 0:
 					saver.save(sess, os.path.join(os.getcwd(), 'trained_variables2.ckpt'))
-				train_step.run(feed_dict={x: xtrain_chunk, y_: ytrain_chunk, keep_prob: 0.5})
+				train_step.run(feed_dict={x: xtrain_chunk, y_: ytrain_chunk, keep_prob: dropout_rate})
 			num_train_images = chunk_size*len(chunk_indices)
 			train_acc = train_acc/num_train_images
 			training_acc = np.append(training_acc,float(train_acc))
