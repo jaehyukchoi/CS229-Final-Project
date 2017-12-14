@@ -9,14 +9,14 @@ import os.path
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2' 
 
 # Hyperparameters
-learning_rate = 1e-4
+learning_rate = 5
 num_steps = 2000
 batch_size = 32
 
 im_size = 400
 num_input = im_size*im_size 
 im_size_flat = im_size * im_size * 3
-num_classes = 10 # 10 classes of prices ranges
+num_classes = 10
 dropout_rate = 0.5
 classes = [[0,101],[101,196],[196,321],[321,499],[499,760],[760,1202],[1202,2033],[2033,3857],[3857,9643],[9643,60130038]]
 
@@ -28,21 +28,18 @@ def load_data(start,end):
 	image_dir = os.listdir( im_path )
 	num_item = 0
 	count = 0
-	for item in image_dir:
+	for item in image_dir[start:end+1]:
 		if os.path.isfile(im_path+item):
 			price_label = int(item.split('_')[0])
 			im = np.array(cv2.imread(im_path+item,-1))
 			if im is not None and im.shape == (im_size,im_size,3):
-				if end <= count:
-					break
-				if start <= count:
-					X.append(im)
-					print(item)
-					print(num_item)
-					num_item += 1
-					for i in range(len(classes)):
-						if price_label >= classes[i][0] and price_label < classes[i][1]:
-							labels.append(i)
+				X.append(im)
+				print(item)
+				print(num_item)
+				num_item += 1
+				for i in range(len(classes)):
+					if price_label >= classes[i][0] and price_label < classes[i][1]:
+						labels.append(i)
 				count += 1
 		
 	
@@ -69,22 +66,20 @@ def load_test_data(start,end):
 	image_dir = os.listdir( im_path )
 	num_item = 0
 	count = 0
-	for item in image_dir:
+	for item in image_dir[start:end+1]:
 		if os.path.isfile(im_path+item):
 			price_label = int(item.split('_')[0])
 			im = np.array(cv2.imread(im_path+item,-1))
 			if im is not None and im.shape == (im_size,im_size,3):
-				if end <= count:
-					break
-				if start <= count:
-					X.append(im)
-					print(item)
-					print(num_item)
-					num_item += 1
-					for i in range(len(classes)):
-						if price_label >= classes[i][0] and price_label < classes[i][1]:
-							labels.append(i)
+				X.append(im)
+				print(item)
+				print(num_item)
+				num_item += 1
+				for i in range(len(classes)):
+					if price_label >= classes[i][0] and price_label < classes[i][1]:
+						labels.append(i)
 				count += 1
+
 	X = np.vstack(X)
 	num_images  = int(X.shape[0]/im_size)
 	X = X.reshape((num_images,im_size_flat))
@@ -102,7 +97,7 @@ def generate_chunk(data, chunk_size = batch_size):
 	return chunk_indices
 
 def onehot_conv(array):
-	onehot = np.zeros((10,len(array)))
+	onehot = np.zeros((num_classes,len(array)))
 	for i,el in enumerate(array):
 		onehot[el,i] = 1
 	return onehot.transpose()
@@ -127,7 +122,10 @@ sess = tf.InteractiveSession()
 sess.run(tf.global_variables_initializer())
 
 x = tf.placeholder(tf.float32, shape=[None, im_size_flat])
-y_ = tf.placeholder(tf.float32, shape=[None, 10])
+mean, var = tf.nn.moments(x,axes=[0])
+x = tf.nn.batch_normalization(x,mean,var,None,None,1e-10)
+
+y_ = tf.placeholder(tf.float32, shape=[None, num_classes])
 
 W_conv1 = weight_variable([5, 5, 3, 32])
 b_conv1 = bias_variable([32])
@@ -158,8 +156,8 @@ h_fc1 = tf.nn.relu(tf.matmul(h_pool3_flat, W_fc1) + b_fc1)
 keep_prob = tf.placeholder(tf.float32)
 h_fc1_drop = tf.nn.dropout(h_fc1, keep_prob)
 
-W_fc2 = weight_variable([1024, 10])
-b_fc2 = bias_variable([10])
+W_fc2 = weight_variable([1024, num_classes])
+b_fc2 = bias_variable([num_classes])
 
 y_conv = tf.matmul(h_fc1_drop, W_fc2) + b_fc2
 
@@ -184,8 +182,8 @@ else:
 
 with tf.Session() as sess:
 	sess.run(tf.global_variables_initializer())
-	if os.path.isfile('trained_variables2.ckpt.data-00000-of-00001'):
-		saver.restore(sess, os.path.join(os.getcwd(), 'trained_variables2.ckpt'))
+	if os.path.isfile('trained_variables.ckpt.data-00000-of-00001'):
+		saver.restore(sess, os.path.join(os.getcwd(), 'trained_variables.ckpt'))
 		print("Model restored.")
 
 
@@ -195,6 +193,7 @@ with tf.Session() as sess:
 			if t == 1:
 				#Load our data
 				xtrain,labelstrain,xdev,labelsdev = load_data(0,30000)
+				
 				data_train = (xtrain,onehot_conv(labelstrain))
 				data_dev = (xdev,onehot_conv(labelsdev))
 			elif t == 2:
@@ -221,7 +220,7 @@ with tf.Session() as sess:
 				train_acc += chunk_size*chunk_train_acc
 				count += 1
 				if count%100 == 0:
-					saver.save(sess, os.path.join(os.getcwd(), 'trained_variables2.ckpt'))
+					saver.save(sess, os.path.join(os.getcwd(), 'trained_variables.ckpt'))
 				train_step.run(feed_dict={x: xtrain_chunk, y_: ytrain_chunk, keep_prob: dropout_rate})
 			num_train_images = chunk_size*len(chunk_indices)
 			train_acc = train_acc/num_train_images
@@ -261,8 +260,8 @@ with tf.Session() as sess:
 		test_acc += chunk_size*chunk_test_acc
 	num_test_images = chunk_size*len(chunk_indices)
 	test_acc = test_acc/num_test_images
-	np.save('test_acc',np.array[test_acc])
-	print('test accuracy %g' % test_acc) 
+	print('test accuracy %g' % test_acc)
+	np.save('test_acc',np.array([test_acc]))
 
 
 
