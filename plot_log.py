@@ -21,7 +21,6 @@ def plot_confusion_matrix(cm, classes,
         print('Confusion matrix, without normalization')
     cm = np.rot90(cm)
     cm = np.rot90(cm)
-    cm = np.transpose(cm)
     print(cm)
 
     plt.imshow(cm, interpolation='nearest', cmap=cmap)
@@ -58,7 +57,7 @@ plt.figure()
 plt.plot(train_acc)
 plt.plot(valid_acc)
 plt.xlabel('Epochs')
-plt.ylabel('Training Accuracy')
+plt.ylabel('Accuracy')
 plt.title('Softmax Regression Accuracy vs Epoch')
 plt.legend(['train acc','valid acc'])
 plt.savefig('accuracy')
@@ -67,8 +66,8 @@ plt.savefig('accuracy')
 plt.figure()
 cm = np.load('test_confusion.npy')
 class_names = [0,1,2,3,4,5,6,7,8,9]
-plot_confusion_matrix(cm, classes=class_names, normalize=False,
-                      title='Test Confusion Matrix for Softmax Regression')
+plot_confusion_matrix(cm, classes=class_names, normalize=True,
+                      title='Normalized Test Confusion Matrix for Softmax Regression')
 plt.savefig('test_confusion')
 plt.show()
 
